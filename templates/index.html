@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <title>Blockchain</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<style>
+    h1{
+        border: 2px solid #007BFF;
+        padding: 20px;
+        margin: 40px;
+        text-align: center;
+        color: #007BFF;
+    }
+    .subContainer{
+        margin-top: 40px;
+    }
+    .block-div{
+        padding: 10px;
+        background-color: #007BFF;
+        color: white;
+        font-size:12px ;
+        box-shadow: #007BFF;
+        text-align: left !important;
+        border-radius: 10px;
+    }
+    input{
+        width: 50% !important;
+    }
+    .col{
+        padding: 10px;
+        border: 1px solid  #007BFF !important;
+    }
+</style>
+<body>
+
+<div class="container">
+    <h1>Blockchain in Python</h1>
+<div class="subContainer">
+    <center>
+        <div class="row">
+                  <div class="col">
+
+                      <form name="addBlock">
+
+  <div class="form-group" >
+      <label for="dataId"><strong>Enter Data</strong></label>
+    <input type="text" class="form-control" id="dataId" name="dataName"  placeholder="Enter Data">
+
+  </div>
+  <button id="addSubmit" type="submit" class="btn btn-primary">Add Block</button>
+    </form>
+<table id="addDatatable" style="margin: 20px;">
+
+
+<tr>
+
+    <td><div class="block-div" >
+        Block: {{0}}<br>
+        Hash: {{blockchain.chain[0].hash }}<br>
+        Data: {{blockchain.chain[0].data}}<br>
+        Previous Hash: {{blockchain.chain[0].previous_hash }}<br>
+       Time Stamp: {{blockchain.chain[0].timestamp }}
+        </div>
+    </td>
+
+</tr>
+    <tr>
+            <td><div class="block-div" >
+            Block: {{1}}<br>
+            Hash: {{blockchain.chain[1].hash }}<br>
+            Data: {{blockchain.chain[1].data}}<br>
+            Previous Hash: {{blockchain.chain[1].previous_hash }}<br>
+           Time Stamp: {{blockchain.chain[1].timestamp }}
+            </div>
+        </td>
+
+    </tr>
+
+
+</table>
+        </div>
+
+<div class="col">
+    <form name="tampBlock">
+        <div class="form-group">
+            <label for="blockid"><strong>Tamper Data</strong></label>
+            <input type="text" class="form-control" name="blockId" id="blockId"  placeholder="Enter Block No">
+            <input type="text" class="form-control" name="newData" id="newData" placeholder="New Data">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Tamper</button>
+    </form>
+
+    <div id="notice" style="display: none">
+
+
+    </div>
+<table id="tamperedBlocks" style="margin: 20px;">
+
+<!-- table rows {%for i in range(0,2)%}
+<tr>
+
+    <td><div class="block-div" >
+        Block: {{i}}<br>
+        Hash: {{blockchain.chain[i].hash }}<br>
+        Data: {{blockchain.chain[i].data}}<br>
+        Previous Hash: {{blockchain.chain[i].previous_hash }}<br>
+       Time Stamp: {{blockchain.chain[i].timestamp }}
+        </div>
+    </td>
+
+</tr>-->
+<!-- {%endfor%} -->
+</table>
+</div>
+
+</div>
+
+
+    </center>
+</div>
+</div>
+
+<br>
+<center>
+
+
+<!-- Table headers -->
+
+
+</table>
+
+</center>
+
+<script>
+    var blockNo=1;
+    var updatedblockNo=0;
+$('form[name="addBlock"]').submit(function (e){
+   var $form=$(this);
+   var data=$form.serialize();
+   $form.trigger("reset");
+
+   $.ajax({
+       url:"addBlock",
+       method:"POST",
+       data:data,
+
+       success:function (resp){
+           blockNo +=1
+           var a="<tr>\n" +
+               "\n" +
+               "    <td><div class=\"block-div\" >\n" +
+               "Block:"+ blockNo + "<br>\n"+
+               "        Hash: " + resp['hash']+"<br>\n" +
+               "        Data: "+resp['data']+"<br>\n" +
+               "        Previous Hash: "+ resp['prevhash']+"<br>\n" +
+               "       Time Stamp: "+resp['timestamp']+" \n" +
+               "        </div>\n" +
+               "    </td>\n" +
+               "\n" +
+               "</tr>";
+
+
+           $('#addDatatable').append(a);
+
+
+        console.log(resp['data']);
+        console.log(resp['hash']);
+         console.log(resp['prevhash']);
+         console.log(resp['timestamp']);
+
+       },
+       error:function(resp){
+           console.log(resp);
+       }
+
+   });
+
+
+e.preventDefault();
+
+});
+
+
+$('form[name="tampBlock"]').submit(function (e){
+   var $form=$(this);
+   var data=$form.serialize();
+
+   $.ajax({
+       url:"checkChain",
+       method:"POST",
+       data:data,
+
+       success:function (resp){
+         console.log(resp['status']);
+         if(resp['status']==false){
+             $("#notice").css('display','block')
+
+             $('#notice').html("<h3 style='color:red'> Chain has been tampered.</h3>" +
+                 "<p>Now you will see an invalid chain</p>")
+
+               $.ajax({
+                   url:"getchain",
+                   method:"GET",
+
+                   success:function (resp){
+                     console.log(resp['chain']);
+
+                     let i=0;
+                     while (resp['chain'][i]['hash']!='null'){
+
+                         var a="<tr>\n" +
+                       "\n" +
+                       "    <td><div class=\"block-div\" >\n" +
+                       "Block:"+ updatedblockNo + "<br>\n"+
+                       "        Hash: " + resp['chain'][i]['hash']+"<br>\n" +
+                       "        Data: "+resp['chain'][i]['data']+"<br>\n" +
+                       "        Previous Hash: "+ resp['chain'][i]['prevhash']+"<br>\n" +
+                       "       Time Stamp: "+resp['chain'][i]['timestamp']+" \n" +
+                       "        </div>\n" +
+                       "    </td>\n" +
+                       "\n" +
+                       "</tr>";
+
+                      $('#tamperedBlocks').append(a);
+
+                      updatedblockNo +=1
+
+                         i+=1
+                     }
+
+                     },
+                           error:function(resp){
+                               console.log(resp);
+                           }
+
+                       });
+
+
+
+
+
+
+         }
+
+
+       },
+       error:function(resp){
+           console.log(resp);
+       }
+
+   });
+
+
+e.preventDefault();
+
+});
+
+
+</script>
+</body>
+</html>
